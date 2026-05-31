@@ -1,53 +1,56 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { create } from 'zustand'
 import type { LoginResponse } from '@app/shared'
 
-export const useAuthStore = defineStore('auth', () => {
-  // --- State ---
-  const token = ref<string>(localStorage.getItem('token') || '')
-  const nickname = ref<string | null>(localStorage.getItem('nickname') || null)
+/**
+ * Local storage keys for persisting session data across page reloads
+ */
+const TOKEN_KEY = 'token'
+const NICKNAME_KEY = 'nickname'
+const USER_ID_KEY = 'userId'
 
-  // Getters
-  const isAuthenticated = computed(() => !!token.value && !!nickname.value)
+/**
+ * Shape of the authentication state and available actions
+ */
+type AuthState = {
+  token: string
+  nickname: string | null
+  userId: string | null
+  setSession: (session: LoginResponse) => void
+  logout: () => void
+}
 
-  // Actions
-  const login = async (userNickname: string) => {
-    const response = await fetch(
-      `${import.meta.env.VITE_SERVER_URL || ''}/auth/login`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ nickname: userNickname }),
-      },
-    )
+/**
+ * Zustand store for handling user authentication
+ */
+export const useAuthStore = create<AuthState>((set) => ({
+  // Initialize state from local storage to keep the user logged in on refresh
+  token: localStorage.getItem(TOKEN_KEY) ?? '',
+  nickname: localStorage.getItem(NICKNAME_KEY),
+  userId: localStorage.getItem(USER_ID_KEY),
 
-    const data: LoginResponse = await response.json()
+  setSession: ({ token, nickname, userId }) => {
+    // Persist credentials to local storage
+    localStorage.setItem(TOKEN_KEY, token)
+    localStorage.setItem(NICKNAME_KEY, nickname)
+    localStorage.setItem(USER_ID_KEY, userId)
 
-    if (!response.ok) {
-      throw new Error((data as any).message || 'Wystąpił błąd logowania.')
-    }
+    // Update store state
+    set({ token, nickname, userId })
+  },
 
-    // Update state and localStorage
-    token.value = data.token
-    nickname.value = data.nickname
-    localStorage.setItem('token', data.token)
-    localStorage.setItem('nickname', data.nickname)
-  }
+  logout: () => {
+    // Remove credentials from local storage
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(NICKNAME_KEY)
+    localStorage.removeItem(USER_ID_KEY)
 
-  const logout = () => {
-    token.value = ''
-    nickname.value = null
-    localStorage.removeItem('token')
-    localStorage.removeItem('nickname')
-  }
+    // Reset store state to initial empty values
+    set({ token: '', nickname: null, userId: null })
+  },
+}))
 
-  return {
-    token,
-    nickname,
-    isAuthenticated,
-    login,
-    logout,
-  }
-})
+/**
+ * Simple selector to check if a valid session exists in the state
+ */
+export const selectIsAuthenticated = (state: AuthState) =>
+  Boolean(state.token && state.nickname)

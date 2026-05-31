@@ -2,9 +2,9 @@
 
 ### [Live Demo](https://chat-app-lh2l.onrender.com/)
 
-A real-time chat application built with Vue 3 and Socket.io.
+A real-time chat application built with React and Socket.io.
 
-![app preview](./app-screenshot.png)
+![app preview](./app-screenshot-02.jpg)
 
 ## Features
 
@@ -24,10 +24,10 @@ A real-time chat application built with Vue 3 and Socket.io.
 
 ### Frontend
 
-- Vue 3
+- React
 - Vite
 - Tailwind CSS
-- Pinia (state management)
+- Zustand (state management)
 
 ### Backend
 
@@ -104,7 +104,7 @@ $ npm run build
 - Message authors are stored as immutable snapshots to preserve chat history consistency.
   User entities are intentionally removed on logout as a project simplification, allowing the data model to focus on real-time behavior rather than long-lived user accounts.
 
-- Pinia store used to optimize frontend state handling and reduce unnecessary reactivity.
+- Zustand store used to optimize frontend state handling and reduce unnecessary reactivity.
 
 - Strict TypeScript usage across all layers to minimize runtime errors and improve maintainability.
 
